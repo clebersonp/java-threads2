@@ -1,8 +1,8 @@
 package br.com.alura.servidor;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class DistribuirTarefas implements Runnable {
 
@@ -17,15 +17,36 @@ public class DistribuirTarefas implements Runnable {
   @Override
   public void run() {
 
-    try (final BufferedReader reader =
-        new BufferedReader(new InputStreamReader(this.socket.getInputStream()))) {
+    try {
       System.out.format("Distribuindo tarefas para o socket: %s %n", this.socket);
 
       System.out.format("Recebendo informação do cliente: %s %n", this.nome);
 
-      reader.lines().forEach(System.out::println);
+      final Scanner entradaCliente = new Scanner(this.socket.getInputStream());
 
-      Thread.sleep(20_000L);
+      final PrintStream saidaCliente = new PrintStream(this.socket.getOutputStream());
+
+      while (entradaCliente.hasNextLine()) {
+        final String comando = entradaCliente.nextLine();
+        System.out.println("Comando recebido:  " + comando);
+
+        switch (comando) {
+          case "c1": {
+            saidaCliente.println("Confirmação comando c1");
+            break;
+          }
+          case "c2": {
+            saidaCliente.println("Confirmação comando c2");
+            break;
+          }
+          default: {
+            saidaCliente.println("Comando não encontrado!");
+          }
+        }
+      }
+
+      entradaCliente.close();
+      saidaCliente.close();
       System.out.format("Finalizando a tarefa do cliente: %s %n", this.nome);
     } catch (final Exception e) {
       e.printStackTrace();
